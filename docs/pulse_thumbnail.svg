@@ -1,0 +1,20 @@
+<svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg" role="img">
+<title>Pulse — Relationship intelligence for Slack Connect</title>
+<desc>Branded thumbnail for the Pulse Devpost submission, featuring a heartbeat waveform motif on Slack's aubergine brand color.</desc>
+
+<rect x="0" y="0" width="1200" height="800" fill="#4A154B"></rect>
+
+<circle cx="1030" cy="140" r="260" fill="#ffffff" opacity="0.05"></circle>
+<circle cx="90" cy="710" r="220" fill="#ffffff" opacity="0.05"></circle>
+<circle cx="1120" cy="640" r="90" fill="#ffffff" opacity="0.04"></circle>
+
+<text x="80" y="270" fill="#ffffff" font-family="'Segoe UI', Arial, sans-serif" font-size="150" font-weight="700">Pulse</text>
+<text x="84" y="330" fill="#D9AFDB" font-family="'Segoe UI', Arial, sans-serif" font-size="34" font-weight="400">Relationship intelligence for Slack Connect</text>
+
+<path d="M60,600 L280,600 L320,520 L360,690 L400,560 L440,600 L1140,600"
+      fill="none" stroke="#ECB22E" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"></path>
+<circle cx="360" cy="690" r="11" fill="#E01E5A"></circle>
+
+<text x="84" y="765" fill="#D9AFDB" font-family="'Segoe UI', Arial, sans-serif" font-size="24" font-weight="400">Slack Connect  ·  Salesforce MCP  ·  Claude</text>
+
+</svg>

@@ -1,0 +1,209 @@
+<svg viewBox="0 0 970 1080" xmlns="http://www.w3.org/2000/svg" role="img">
+<title>Pulse Architecture</title>
+<desc>Architecture diagram showing Slack Connect channels feeding Pulse's backend, which runs pattern detection, champion tracking, and health scoring, combines external signals, an RTS-powered chatbot, and a Salesforce MCP client that both reads and writes CRM data, then generates Claude-written intelligence briefs delivered as Block Kit alerts in Slack.</desc>
+<defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#9ca3af"></path>
+  </marker>
+</defs>
+
+<style>
+  text { font-family: 'Segoe UI', Arial, sans-serif; }
+  .title { font-size: 15px; font-weight: 600; }
+  .subtitle { font-size: 11px; }
+  .box { stroke-width: 1.5; }
+  .conn { stroke: #9ca3af; stroke-width: 1.5; fill: none; marker-end: url(#arrow); }
+  .ext-box { stroke-dasharray: 4,3; }
+
+  .c-gray rect { fill: #f3f4f6; stroke: #9ca3af; }
+  .c-gray text { fill: #111827; }
+  .c-gray text.subtitle { fill: #4b5563; }
+
+  .c-blue rect { fill: #dbeafe; stroke: #3b82f6; }
+  .c-blue text { fill: #1e3a8a; }
+  .c-blue text.subtitle { fill: #1e40af; }
+
+  .c-amber rect { fill: #fef3c7; stroke: #f59e0b; }
+  .c-amber text { fill: #78350f; }
+  .c-amber text.subtitle { fill: #92400e; }
+
+  .c-purple rect { fill: #ede9fe; stroke: #8b5cf6; }
+  .c-purple text { fill: #4c1d95; }
+  .c-purple text.subtitle { fill: #5b21b6; }
+
+  .c-red rect { fill: #fee2e2; stroke: #ef4444; }
+  .c-red text { fill: #7f1d1d; }
+  .c-red text.subtitle { fill: #991b1b; }
+</style>
+
+<!-- Header -->
+<rect x="0" y="0" width="970" height="1080" fill="#ffffff"></rect>
+<text x="450" y="28" text-anchor="middle" fill="#111827" font-size="19" font-weight="700">Pulse — Relationship Intelligence Architecture</text>
+<text x="450" y="47" text-anchor="middle" fill="#4b5563" font-size="12">Slack Connect signals + Salesforce CRM + Claude, combined into one alert</text>
+
+<!-- Tier 1: Workspaces -->
+<g class="c-gray">
+  <rect x="90" y="70" width="180" height="46" rx="8" class="box"></rect>
+  <text x="180" y="90" text-anchor="middle" class="title">Team Workspace</text>
+  <text x="180" y="105" text-anchor="middle" class="subtitle">runs Pulse bot</text>
+</g>
+<g class="c-gray">
+  <rect x="630" y="70" width="180" height="46" rx="8" class="box"></rect>
+  <text x="720" y="90" text-anchor="middle" class="title">Customer Workspace</text>
+  <text x="720" y="105" text-anchor="middle" class="subtitle">Slack Connect guest</text>
+</g>
+<path class="conn" d="M220,116 L340,150"></path>
+<path class="conn" d="M680,116 L560,150"></path>
+
+<!-- Shared channel -->
+<g class="c-red">
+  <rect x="330" y="150" width="240" height="46" rx="8" class="box"></rect>
+  <text x="450" y="170" text-anchor="middle" class="title">Shared Slack Connect Channel</text>
+  <text x="450" y="185" text-anchor="middle" class="subtitle">cross-workspace, private</text>
+</g>
+<!-- Why-Slack callout -->
+<path d="M572,168 L610,168" stroke="#9ca3af" stroke-width="1" stroke-dasharray="2,2"></path>
+<text x="615" y="163" fill="#111827" font-size="11" font-weight="600">No CRM, support tool,</text>
+<text x="615" y="177" fill="#111827" font-size="11" font-weight="600">or sentiment platform</text>
+<text x="615" y="191" fill="#111827" font-size="11" font-weight="600">can see this data.</text>
+<path class="conn" d="M450,196 L450,225"></path>
+
+<!-- Tier 2: Events API (required tech 1) -->
+<g class="c-amber">
+  <rect x="170" y="225" width="560" height="52" rx="8" class="box"></rect>
+  <text x="450" y="247" text-anchor="middle" class="title">Slack Events API + Bolt App (Socket Mode)</text>
+  <text x="450" y="263" text-anchor="middle" class="subtitle">(1) Slack AI Capabilities — channel monitoring, Block Kit</text>
+</g>
+<path class="conn" d="M450,277 L450,305"></path>
+
+<!-- Core engine label -->
+<text x="450" y="318" text-anchor="middle" fill="#4b5563" font-size="11" font-weight="600" letter-spacing="0.5">PULSE CORE ENGINE (own code)</text>
+
+<!-- Tier 3: 4 core boxes -->
+<g class="c-blue"><rect x="90" y="330" width="150" height="68" rx="8" class="box"></rect>
+<text x="165" y="356" text-anchor="middle" class="title">Message Ingestion</text>
+<text x="165" y="371" text-anchor="middle" class="subtitle">+ full history backfill</text></g>
+
+<g class="c-blue"><rect x="260" y="330" width="150" height="68" rx="8" class="box"></rect>
+<text x="335" y="356" text-anchor="middle" class="title">Pattern Detector</text>
+<text x="335" y="371" text-anchor="middle" class="subtitle">8 risk-language categories</text></g>
+
+<g class="c-blue"><rect x="430" y="330" width="150" height="68" rx="8" class="box"></rect>
+<text x="505" y="356" text-anchor="middle" class="title">Champion Tracker</text>
+<text x="505" y="371" text-anchor="middle" class="subtitle">auto-ID + silence detect</text></g>
+
+<g class="c-blue"><rect x="600" y="330" width="150" height="68" rx="8" class="box"></rect>
+<text x="675" y="356" text-anchor="middle" class="title">Health Score Engine</text>
+<text x="675" y="371" text-anchor="middle" class="subtitle">5 factors + compound risk</text></g>
+
+<path class="conn" d="M165,398 L400,440"></path>
+<path class="conn" d="M335,398 L400,440"></path>
+<path class="conn" d="M505,398 L500,440"></path>
+<path class="conn" d="M675,398 L560,440"></path>
+
+<!-- External services label -->
+<text x="450" y="428" text-anchor="middle" fill="#4b5563" font-size="10">dashed border = calls an external service</text>
+
+<!-- Tier 4: 3 intelligence inputs -->
+<g class="c-gray"><rect x="90" y="440" width="200" height="66" rx="8" class="box ext-box"></rect>
+<text x="190" y="465" text-anchor="middle" class="title">External Signal Scanner</text>
+<text x="190" y="480" text-anchor="middle" class="subtitle">Google News RSS + Claude</text></g>
+
+<g class="c-amber"><rect x="330" y="440" width="200" height="66" rx="8" class="box ext-box"></rect>
+<text x="430" y="462" text-anchor="middle" class="title">RTS Chatbot</text>
+<text x="430" y="477" text-anchor="middle" class="subtitle">(2) assistant.search.context</text>
+<text x="430" y="491" text-anchor="middle" class="subtitle">"@Pulse ask"</text></g>
+
+<g class="c-amber"><rect x="570" y="440" width="200" height="66" rx="8" class="box ext-box"></rect>
+<text x="670" y="462" text-anchor="middle" class="title">Salesforce MCP Client</text>
+<text x="670" y="477" text-anchor="middle" class="subtitle">(3) real MCP protocol</text>
+<text x="670" y="491" text-anchor="middle" class="subtitle">reads Account data</text></g>
+
+<path class="conn" d="M190,506 L440,545"></path>
+<path class="conn" d="M430,506 L450,545"></path>
+<path class="conn" d="M670,506 L460,545"></path>
+
+<!-- Tier 5: Brief generator -->
+<g class="c-purple">
+  <rect x="170" y="545" width="560" height="52" rx="8" class="box ext-box"></rect>
+  <text x="450" y="567" text-anchor="middle" class="title">Claude Sonnet — Intelligence Brief Generator</text>
+  <text x="450" y="583" text-anchor="middle" class="subtitle">Anthropic API — unifies all signals into one brief</text>
+</g>
+<path class="conn" d="M450,597 L450,625"></path>
+
+<!-- Tier 6: Alert dispatcher -->
+<g class="c-purple">
+  <rect x="170" y="625" width="560" height="46" rx="8" class="box"></rect>
+  <text x="450" y="645" text-anchor="middle" class="title">Alert Dispatcher</text>
+  <text x="450" y="660" text-anchor="middle" class="subtitle">48h throttle per account</text>
+</g>
+<path class="conn" d="M450,671 L450,700"></path>
+
+<!-- Tier 7: output -->
+<g class="c-amber"><rect x="90" y="700" width="200" height="60" rx="8" class="box"></rect>
+<text x="190" y="724" text-anchor="middle" class="title">Block Kit Alert Card</text>
+<text x="190" y="739" text-anchor="middle" class="subtitle">(1) health, champion, CRM</text></g>
+
+<g class="c-gray"><rect x="330" y="700" width="200" height="60" rx="8" class="box"></rect>
+<text x="430" y="724" text-anchor="middle" class="title">AM Slack DM</text>
+<text x="430" y="739" text-anchor="middle" class="subtitle">account manager inbox</text></g>
+
+<g class="c-gray"><rect x="570" y="700" width="200" height="60" rx="8" class="box"></rect>
+<text x="670" y="722" text-anchor="middle" class="title">Compose &amp; Send Modal</text>
+<text x="670" y="737" text-anchor="middle" class="subtitle">human review before send</text></g>
+
+<path class="conn" d="M190,760 L190,790"></path>
+<path class="conn" d="M430,760 L330,790"></path>
+<path class="conn" d="M670,760 L670,790"></path>
+
+<!-- Tier 8: three symmetric terminal actions -->
+<g class="c-amber">
+  <rect x="90" y="790" width="220" height="52" rx="8" class="box ext-box"></rect>
+  <text x="200" y="811" text-anchor="middle" class="title">Salesforce Task Write-back</text>
+  <text x="200" y="827" text-anchor="middle" class="subtitle">CRM record of what Pulse found</text>
+</g>
+
+<g class="c-gray">
+  <rect x="340" y="790" width="220" height="52" rx="8" class="box"></rect>
+  <text x="450" y="811" text-anchor="middle" class="title">Snooze / View History</text>
+  <text x="450" y="827" text-anchor="middle" class="subtitle">AM self-serve actions</text>
+</g>
+
+<g class="c-gray">
+  <rect x="590" y="790" width="220" height="52" rx="8" class="box"></rect>
+  <text x="700" y="811" text-anchor="middle" class="title">Draft Sent to Customer</text>
+  <text x="700" y="827" text-anchor="middle" class="subtitle">posted back into Slack channel</text>
+</g>
+
+<!-- Bracket tying the two Salesforce boxes together -->
+<path d="M840,470 L858,470 L858,816 L840,816" fill="none" stroke="#0d9488" stroke-width="1.5"></path>
+<text x="874" y="500" fill="#0d9488" font-size="10" font-weight="600" transform="rotate(90 874 500)">SALESFORCE</text>
+<text x="866" y="650" fill="#0d9488" font-size="9">read + write</text>
+<text x="866" y="663" fill="#0d9488" font-size="9">one org · JWT</text>
+
+<!-- Storage footer -->
+<g class="c-gray">
+  <rect x="170" y="875" width="560" height="46" rx="8" class="box" stroke-dasharray="3,3"></rect>
+  <text x="450" y="894" text-anchor="middle" class="title">SQLite</text>
+  <text x="450" y="909" text-anchor="middle" class="subtitle">accounts · messages · health_scores · signals · alerts</text>
+</g>
+
+<!-- Future roadmap -->
+<text x="450" y="950" text-anchor="middle" fill="#4b5563" font-size="10" font-weight="600" letter-spacing="0.5">FUTURE ROADMAP (not built for hackathon)</text>
+<g opacity="0.45">
+  <rect x="150" y="960" width="180" height="42" rx="8" fill="none" stroke="#9ca3af" stroke-dasharray="3,3"></rect>
+  <text x="240" y="985" text-anchor="middle" fill="#4b5563" font-size="11">Email (Gmail MCP)</text>
+
+  <rect x="360" y="960" width="180" height="42" rx="8" fill="none" stroke="#9ca3af" stroke-dasharray="3,3"></rect>
+  <text x="450" y="985" text-anchor="middle" fill="#4b5563" font-size="11">Meeting Transcripts</text>
+
+  <rect x="570" y="960" width="180" height="42" rx="8" fill="none" stroke="#9ca3af" stroke-dasharray="3,3"></rect>
+  <text x="660" y="985" text-anchor="middle" fill="#4b5563" font-size="11">Mobile Push</text>
+</g>
+
+<!-- Legend -->
+<rect x="260" y="1030" width="12" height="12" rx="3" fill="#f59e0b"></rect>
+<text x="280" y="1040" fill="#4b5563" font-size="11">required tech ((1) Slack AI (2) RTS (3) MCP)</text>
+<line x1="470" y1="1036" x2="490" y2="1036" stroke="#9ca3af" stroke-dasharray="4,3"></line>
+<text x="496" y="1040" fill="#4b5563" font-size="11">calls external service</text>
+</svg>

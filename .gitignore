@@ -1,0 +1,10 @@
+.env
+salesforce_jwt/server.key
+salesforce_jwt/server.csr
+pulse.db
+__pycache__/
+*.pyc
+bot.log
+bot_err.log
+node_modules/
+.sf/
