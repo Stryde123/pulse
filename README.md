@@ -90,13 +90,16 @@ python main.py
 
 ## Slack commands
 
+All commands are `@Pulse` mentions in a Slack Connect channel — no slash
+commands.
+
 | Command | What it does |
 |---|---|
-| `/register <account-name>` | Register the current channel as an account |
-| `/list` | List all registered accounts |
-| `/status <account-name>` | Show current health score and breakdown |
-| `/toggle <feature> <on/off>` | Enable/disable an opt-in feature per account |
-| `@Pulse ask <question>` | Ask Pulse anything about the account's history |
+| `@Pulse register <#channel> <Account Name> AM:<@user> [value:<n>] [renewal:<YYYY-MM-DD>]` | Register the channel as a monitored account |
+| `@Pulse list` | List all registered accounts |
+| `@Pulse status <account name or #channel>` | Show current health score and breakdown |
+| `@Pulse toggle <account name or #channel> [champion:on/off] [signals:on/off] [crm:on/off]` | Enable/disable opt-in features per account |
+| `@Pulse ask <question>` | Ask Pulse anything about the account's history, using Slack's Real-Time Search |
 
 ## Demo
 
