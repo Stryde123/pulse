@@ -62,6 +62,18 @@ def get_all_accounts() -> list[dict]:
         return [dict(r) for r in rows]
 
 
+def delete_account(account_id: int) -> None:
+    """Removes an account and all rows tied to it (messages, health scores,
+    signals, alerts) — used by @Pulse unregister."""
+    with get_connection() as conn:
+        conn.execute("DELETE FROM messages WHERE account_id = ?", (account_id,))
+        conn.execute("DELETE FROM health_scores WHERE account_id = ?", (account_id,))
+        conn.execute("DELETE FROM signals WHERE account_id = ?", (account_id,))
+        conn.execute("DELETE FROM alerts WHERE account_id = ?", (account_id,))
+        conn.execute("DELETE FROM accounts WHERE id = ?", (account_id,))
+        conn.commit()
+
+
 def update_champion(account_id: int, champion_user_id: str) -> None:
     with get_connection() as conn:
         conn.execute(

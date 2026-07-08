@@ -11,8 +11,9 @@ Built for the [Slack Agent Builder Challenge](https://slack.com/blog).
 ## What it does
 
 - **Pattern detection** — scans every message in a shared channel for risk
-  signals across 8 categories (contract inquiries, competitor mentions,
-  escalations, sentiment shifts, and more).
+  signals across 7 categories (contract inquiries, competitor mentions,
+  frustration, deprioritization, formality shifts, data exports,
+  internal-discussion leaks).
 - **Health scoring** — combines message frequency, response latency, risk
   flags, champion silence, and external signals into a 0–100 account health
   score, with compound-risk logic that escalates urgency when multiple severe
@@ -99,6 +100,7 @@ commands.
 | `@Pulse list` | List all registered accounts |
 | `@Pulse status <account name or #channel>` | Show current health score and breakdown |
 | `@Pulse toggle <account name or #channel> [champion:on/off] [signals:on/off] [crm:on/off]` | Enable/disable opt-in features per account |
+| `@Pulse unregister <account name or #channel>` | Stop monitoring and delete all its data |
 | `@Pulse ask <question>` | Ask Pulse anything about the account's history, using Slack's Real-Time Search |
 
 ## Demo

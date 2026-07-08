@@ -8,7 +8,7 @@ from db.schema import init_db
 from db.queries import (
     get_account_by_channel, insert_message, insert_account,
     get_all_accounts, snooze_account, get_health_history,
-    update_toggles,
+    update_toggles, delete_account,
 )
 from agents.pattern_detector import detect_patterns
 from agents.health_scorer import score_account
@@ -132,7 +132,9 @@ def handle_mention(event, say, client, logger):
 
     lowered = text.lower()
 
-    if "register" in lowered:
+    if "unregister" in lowered:
+        _handle_unregister(text, say, logger)
+    elif "register" in lowered:
         _handle_register(text, say, client, logger)
     elif "list" in lowered:
         accounts = get_all_accounts()
@@ -155,6 +157,7 @@ def handle_mention(event, say, client, logger):
             "• `@Pulse register <#channel> <Account Name> AM:<@user> [value:<n>] [renewal:<YYYY-MM-DD>] "
             "[champion:on/off] [signals:on/off] [crm:on/off]` — all three default OFF\n"
             "• `@Pulse toggle <account name or #channel> [champion:on/off] [signals:on/off] [crm:on/off]` — change anytime\n"
+            "• `@Pulse unregister <account name or #channel>` — stop monitoring and delete all its data\n"
             "• `@Pulse list` — show all monitored accounts\n"
             "• `@Pulse status <account name or #channel>` — check current health instantly\n"
             "• `@Pulse ask <question>` — search across all monitored Slack Connect channels"
@@ -322,6 +325,30 @@ def _handle_toggle(text: str, say, logger):
         say(f"📊 Health score recalculated: {score}/100 ({urgency.upper()})")
 
     logger.info(f"[{account['name']}] Toggles updated: champion={champion_flag}, signals={signals_flag}, crm={crm_flag}")
+
+
+def _handle_unregister(text: str, say, logger):
+    """
+    @Pulse unregister <account name or #channel> — stops monitoring the
+    account and permanently deletes its messages, health scores, signals,
+    and alerts. Does not touch the Slack channel itself.
+    """
+    import re
+    match = re.search(r"unregister\s+(.+)", text, re.IGNORECASE)
+    if not match:
+        say("Usage: `@Pulse unregister <account name or #channel>`")
+        return
+
+    query = match.group(1).strip()
+    account = _find_account(query)
+    if not account:
+        say(f"Couldn't find an account matching \"{query}\". Try `@Pulse list` to see all accounts.")
+        return
+
+    delete_account(account["id"])
+    say(f"🗑️ *{account['name']}* unregistered — stopped monitoring and deleted its history. "
+        f"The Slack channel itself is untouched; re-register it any time with `@Pulse register`.")
+    logger.info(f"Unregistered account '{account['name']}' (ID {account['id']})")
 
 
 def _handle_ask(text: str, event: dict, say, client, logger):
