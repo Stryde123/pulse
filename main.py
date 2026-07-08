@@ -132,7 +132,12 @@ def handle_mention(event, say, client, logger):
 
     lowered = text.lower()
 
-    if "unregister" in lowered:
+    import re as _re
+    is_help = bool(_re.search(r"(^|\s)help(\s|$)", lowered))
+
+    if is_help:
+        _handle_help(say)
+    elif "unregister" in lowered:
         _handle_unregister(text, say, logger)
     elif "register" in lowered:
         _handle_register(text, say, client, logger)
@@ -152,16 +157,21 @@ def handle_mention(event, say, client, logger):
     elif "toggle" in lowered:
         _handle_toggle(text, say, logger)
     else:
-        say(
-            "Hi! I'm Pulse. Commands:\n"
-            "• `@Pulse register <#channel> <Account Name> AM:<@user> [value:<n>] [renewal:<YYYY-MM-DD>] "
-            "[champion:on/off] [signals:on/off] [crm:on/off]` — all three default OFF\n"
-            "• `@Pulse toggle <account name or #channel> [champion:on/off] [signals:on/off] [crm:on/off]` — change anytime\n"
-            "• `@Pulse unregister <account name or #channel>` — stop monitoring and delete all its data\n"
-            "• `@Pulse list` — show all monitored accounts\n"
-            "• `@Pulse status <account name or #channel>` — check current health instantly\n"
-            "• `@Pulse ask <question>` — search across all monitored Slack Connect channels"
-        )
+        _handle_help(say)
+
+
+def _handle_help(say):
+    say(
+        "Hi! I'm Pulse. Commands:\n"
+        "• `@Pulse register <#channel> <Account Name> AM:<@user> [value:<n>] [renewal:<YYYY-MM-DD>] "
+        "[champion:on/off] [signals:on/off] [crm:on/off]` — all three default OFF\n"
+        "• `@Pulse toggle <account name or #channel> [champion:on/off] [signals:on/off] [crm:on/off]` — change anytime\n"
+        "• `@Pulse unregister <account name or #channel>` — stop monitoring and delete all its data\n"
+        "• `@Pulse list` — show all monitored accounts\n"
+        "• `@Pulse status <account name or #channel>` — check current health instantly\n"
+        "• `@Pulse ask <question>` — search across all monitored Slack Connect channels\n"
+        "• `@Pulse help` — show this message"
+    )
 
 
 def _find_account(query: str) -> "dict | None":
