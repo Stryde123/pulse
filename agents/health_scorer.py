@@ -189,7 +189,19 @@ def _factor_latency(account_id: int) -> int:
     baseline = get_recent_messages(account_id, days=30)
     recent   = get_recent_messages(account_id, days=7)
     trend    = calculate_latency_trend(recent, baseline)
-    return -trend["latency_penalty"]
+    contribution = -trend["latency_penalty"]
+
+    # A team reply shouldn't need enough message history to compute a
+    # meaningful baseline/recent ratio before it counts for anything — any
+    # team engagement in the last 7 days earns a flat, guaranteed bonus on
+    # top of the ratio comparison, so a single AM response has immediate,
+    # unconditional positive impact rather than only showing up once
+    # there's enough data for the trend comparison to diverge.
+    team_engaged = any(not m["is_customer"] for m in recent)
+    if team_engaged:
+        contribution += 5
+
+    return min(contribution, 15)
 
 
 # ---------------------------------------------------------------------------
