@@ -36,12 +36,19 @@ def get_bot_team_id() -> str:
     return _BOT_TEAM_ID
 
 
-def is_customer_message(event: dict) -> bool:
+def is_customer_message(event: dict, am_user_id: "str | None" = None) -> bool:
     """
     In Slack Connect channels the event payload carries `user_team` (the sender's
     workspace ID). If it differs from the bot's workspace, the sender is on the
     customer side. Falls back to checking `team` field for older API versions.
+
+    The account's registered AM is never treated as the customer, regardless
+    of what the workspace-ID comparison says — this is what actually lets
+    the AM's own replies count as team responses (feeding the latency
+    factor) rather than accidentally being scored as customer messages.
     """
+    if am_user_id and event.get("user") == am_user_id:
+        return False
     sender_team = event.get("user_team") or event.get("team")
     if sender_team:
         return sender_team != get_bot_team_id()
@@ -78,7 +85,7 @@ def handle_message(event, client, logger):
     if not account:
         return
 
-    customer = is_customer_message(event)
+    customer = is_customer_message(event, account.get("am_user_id"))
 
     # Run pattern detection on customer messages only
     flags = detect_patterns(text) if customer else []
@@ -213,9 +220,10 @@ def _find_account_mentioned_in(free_text: str) -> "dict | None":
 
 def _handle_status(text: str, say, logger):
     """
-    @Pulse status <account name or #channel> — instant health check using
-    data already in the database. Deliberately makes no Claude call, so
-    it's free to run as often as anyone wants, unlike a full brief.
+    @Pulse status <account name or #channel> — instant health check,
+    recalculated live on every call (not read from the last stored row) so
+    it reflects any resolution/decay since the last message, not just what
+    happened to be true whenever the score last recomputed.
     """
     import re
     match = re.search(r"status\s+(.+)", text, re.IGNORECASE)
@@ -229,14 +237,12 @@ def _handle_status(text: str, say, logger):
         say(f"Couldn't find an account matching \"{query}\". Try `@Pulse list` to see all accounts.")
         return
 
-    from db.queries import get_latest_health_score, get_recent_signals
+    from db.queries import get_recent_signals
     from agents.champion_tracker import get_champion_metrics
     from blocks.brief_card import URGENCY_EMOJI, _days_to_renewal
 
-    health = get_latest_health_score(account["id"])
-    if not health:
-        say(f"*{account['name']}* has no health score yet — needs at least one message to be scored.")
-        return
+    score, urgency = score_account(account)
+    health = {"score": score, "urgency": urgency}
 
     days_to_renewal = _days_to_renewal(account.get("renewal_date"))
     renewal_display = f"{days_to_renewal} days" if days_to_renewal is not None else "not set"
