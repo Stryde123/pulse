@@ -168,6 +168,12 @@ def calculate_latency_trend(
     """
     Compares response latency in the last 7 days vs the 30-day baseline.
     Returns a dict with baseline_hours, recent_hours, ratio, and a penalty score.
+
+    `latency_penalty` can go negative — a team responding meaningfully
+    faster than its own baseline is active engagement, not just an absence
+    of risk, and should be able to claw back some score, not merely avoid
+    losing more. Without this, nothing the team does ever recovers score;
+    only time passing (old flags aging out of the 14-day window) could.
     """
     baseline_avg = calculate_response_latency(baseline_messages, 0)
     recent_avg = calculate_response_latency(recent_messages, 0)
@@ -186,5 +192,9 @@ def calculate_latency_trend(
             result["latency_penalty"] = 20
         elif ratio >= 2:
             result["latency_penalty"] = 10
+        elif ratio <= 0.5:
+            result["latency_penalty"] = -8   # team responding 2x+ faster than usual
+        elif ratio <= 0.75:
+            result["latency_penalty"] = -4
 
     return result
