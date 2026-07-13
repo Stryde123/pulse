@@ -34,7 +34,10 @@ async def _query_account_async(company_name: str) -> Optional[dict]:
 
     server_params = StdioServerParameters(
         command="npx",
-        args=["-y", "@salesforce/mcp", "--orgs", SF_ORG_ALIAS, "--toolsets", "data"],
+        # Pinned to a known-working version — later releases pull an undici
+        # version that requires webidl APIs not present in Node 20, causing
+        # "webidl.util.markAsUncloneable is not a function" on this host.
+        args=["-y", "@salesforce/mcp@0.30.14", "--orgs", SF_ORG_ALIAS, "--toolsets", "data"],
     )
 
     # Escape single quotes defensively — company names go straight into SOQL
