@@ -98,10 +98,11 @@ commands.
 |---|---|
 | `@Pulse register <#channel> <Account Name> AM:<@user> [value:<n>] [renewal:<YYYY-MM-DD>]` | Register the channel as a monitored account |
 | `@Pulse list` | List all registered accounts |
-| `@Pulse status <account name or #channel>` | Show current health score and breakdown |
+| `@Pulse status <account name or #channel>` | Show current health score and a condensed summary |
+| `@Pulse report <account name or #channel>` | Full per-factor health score breakdown |
 | `@Pulse toggle <account name or #channel> [champion:on/off] [signals:on/off] [crm:on/off]` | Enable/disable opt-in features per account |
 | `@Pulse unregister <account name or #channel>` | Stop monitoring and delete all its data |
-| `@Pulse ask <question>` | Ask Pulse anything about the account's history, using Slack's Real-Time Search |
+| `@Pulse ask <question>` | Ask Pulse anything about the account's history and known external signals, using Slack's Real-Time Search |
 
 ## Demo
 

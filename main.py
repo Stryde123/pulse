@@ -11,7 +11,7 @@ from db.queries import (
     update_toggles, delete_account, get_recent_signals,
 )
 from agents.pattern_detector import detect_patterns
-from agents.health_scorer import score_account
+from agents.health_scorer import score_account, get_score_breakdown
 from agents.rts_monitor import answer_question
 from agents.external_signals import scan_all_accounts
 from agents.champion_tracker import auto_update_champion
@@ -152,6 +152,8 @@ def handle_mention(event, say, client, logger):
         say("\n".join(lines))
     elif "ask" in lowered:
         _handle_ask(text, event, say, client, logger)
+    elif "report" in lowered:
+        _handle_report(text, say, logger)
     elif "status" in lowered:
         _handle_status(text, say, logger)
     elif "toggle" in lowered:
@@ -169,6 +171,7 @@ def _handle_help(say):
         "• `@Pulse unregister <account name or #channel>` — stop monitoring and delete all its data\n"
         "• `@Pulse list` — show all monitored accounts\n"
         "• `@Pulse status <account name or #channel>` — check current health instantly\n"
+        "• `@Pulse report <account name or #channel>` — full per-factor health score breakdown\n"
         "• `@Pulse ask <question>` — search Slack Connect history plus any external "
         "signals already found for that account\n"
         "• `@Pulse help` — show this message"
@@ -270,6 +273,55 @@ def _handle_status(text: str, say, logger):
 
     lines.append(f"Salesforce CRM: {'ON' if account.get('enable_salesforce_crm') else 'OFF'} "
                   f"(`@Pulse toggle` to enable)")
+
+    say("\n".join(lines))
+
+
+FACTOR_LABELS = {
+    "frequency": "Message frequency",
+    "latency": "Response latency",
+    "flags": "Pattern flags",
+    "champion": "Champion activity",
+    "signals": "External signals",
+}
+
+
+def _handle_report(text: str, say, logger):
+    """
+    @Pulse report <account name or #channel> — full per-factor health score
+    breakdown, recalculated live (not just the last stored total). Unlike
+    @Pulse status, this shows exactly how many points each of the five
+    factors contributed, plus whether compound-risk escalation is active.
+    """
+    import re
+    match = re.search(r"report\s+(.+)", text, re.IGNORECASE)
+    if not match:
+        say("Usage: `@Pulse report <account name or #channel>`")
+        return
+
+    query = match.group(1).strip()
+    account = _find_account(query)
+    if not account:
+        say(f"Couldn't find an account matching \"{query}\". Try `@Pulse list` to see all accounts.")
+        return
+
+    result = get_score_breakdown(account)
+    score, urgency, breakdown = result["score"], result["urgency"], result["breakdown"]
+    escalated_from = breakdown.pop("compound_risk_escalated_from", None)
+
+    lines = [f"*{account['name']}* health report — {score}/100 ({urgency.upper()})", ""]
+    for key, penalty in breakdown.items():
+        label = FACTOR_LABELS.get(key, key)
+        sign = f"{penalty}" if penalty <= 0 else f"+{penalty}"
+        lines.append(f"• {label}: {sign}")
+
+    if escalated_from:
+        lines.append("")
+        lines.append(
+            f"⚠️ Compound risk escalation active — urgency bumped from "
+            f"{escalated_from.upper()} to {urgency.upper()} (severe pattern flag + "
+            f"critically silent champion + severe external signal, all present at once)"
+        )
 
     say("\n".join(lines))
 

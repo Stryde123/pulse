@@ -31,11 +31,9 @@ logger = logging.getLogger(__name__)
 # Public entry point
 # ---------------------------------------------------------------------------
 
-def score_account(account: dict) -> tuple[int, str]:
-    """
-    Recalculates health for one account and persists the result.
-    Returns (score, urgency).
-    """
+def _compute(account: dict) -> tuple[int, str, dict]:
+    """Shared by score_account and get_score_breakdown — computes but does
+    not persist. Returns (score, urgency, breakdown)."""
     account_id = account["id"]
     champion_id = account.get("champion_user_id")
     champion_enabled = bool(account.get("enable_champion_tracking"))
@@ -78,22 +76,45 @@ def score_account(account: dict) -> tuple[int, str]:
     # any single factor's score deduction captures on its own — bump urgency
     # up one level regardless of the raw score. Requires both toggles on,
     # since the signal is meaningless without champion + external data.
+    escalated_from = None
     if champion_enabled and signals_enabled and _has_compound_risk(account_id, champion_id):
         escalated = _escalate(urgency)
         if escalated != urgency:
+            escalated_from = urgency
             logger.warning(
                 f"[{account['name']}] Compound risk detected — "
                 f"escalating urgency {urgency.upper()} -> {escalated.upper()}"
             )
         urgency = escalated
 
+    breakdown["compound_risk_escalated_from"] = escalated_from
+
     logger.info(
         f"[{account['name']}] Health score: {score}/100 ({urgency.upper()}) "
         f"breakdown={breakdown}"
     )
 
-    insert_health_score(account_id, score, urgency)
+    return score, urgency, breakdown
+
+
+def score_account(account: dict) -> tuple[int, str]:
+    """
+    Recalculates health for one account and persists the result.
+    Returns (score, urgency).
+    """
+    score, urgency, _ = _compute(account)
+    insert_health_score(account["id"], score, urgency)
     return score, urgency
+
+
+def get_score_breakdown(account: dict) -> dict:
+    """
+    Read-only variant for @Pulse report — same computation as score_account,
+    but doesn't write a new health_scores row. Returns score, urgency, and
+    the per-factor breakdown.
+    """
+    score, urgency, breakdown = _compute(account)
+    return {"score": score, "urgency": urgency, "breakdown": breakdown}
 
 
 def _has_compound_risk(account_id: int, champion_id: str | None) -> bool:
