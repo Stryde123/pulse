@@ -188,10 +188,13 @@ def _generate_brief_with_salesforce_mcp(account: dict, prompt: str) -> Optional[
                     f"proceeding without CRM context")
         crm_block = "(No matching Salesforce Account found for this company.)"
     else:
+        industry = record.get("Industry") or "unknown"
+        revenue = record.get("AnnualRevenue")
+        employees = record.get("NumberOfEmployees")
         crm_block = (
-            f"Industry: {record.get('Industry', 'unknown')}\n"
-            f"Annual Revenue: ${record.get('AnnualRevenue', 0):,.0f}\n"
-            f"Employees: {record.get('NumberOfEmployees', 'unknown')}"
+            f"Industry: {industry}\n"
+            f"Annual Revenue: {'$' + format(revenue, ',.0f') if revenue is not None else 'unknown'}\n"
+            f"Employees: {employees if employees is not None else 'unknown'}"
         )
         logger.info(f"[{account['name']}] Salesforce Account matched via MCP: {record.get('Name')}")
 

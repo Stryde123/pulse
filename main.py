@@ -8,7 +8,7 @@ from db.schema import init_db
 from db.queries import (
     get_account_by_channel, insert_message, insert_account,
     get_all_accounts, snooze_account, get_health_history,
-    update_toggles, delete_account,
+    update_toggles, delete_account, get_recent_signals,
 )
 from agents.pattern_detector import detect_patterns
 from agents.health_scorer import score_account
@@ -169,7 +169,8 @@ def _handle_help(say):
         "• `@Pulse unregister <account name or #channel>` — stop monitoring and delete all its data\n"
         "• `@Pulse list` — show all monitored accounts\n"
         "• `@Pulse status <account name or #channel>` — check current health instantly\n"
-        "• `@Pulse ask <question>` — search across all monitored Slack Connect channels\n"
+        "• `@Pulse ask <question>` — search Slack Connect history plus any external "
+        "signals already found for that account\n"
         "• `@Pulse help` — show this message"
     )
 
@@ -189,6 +190,22 @@ def _find_account(query: str) -> "dict | None":
         if query_lower in a["name"].lower():
             return a
     return None
+
+
+def _find_account_mentioned_in(free_text: str) -> "dict | None":
+    """
+    Reverse of _find_account's substring check — used for @Pulse ask, where
+    the input is a full question rather than a short name/channel query.
+    Looks for a registered account's name appearing anywhere in the text.
+    Longest name wins, so a more specific match beats a shorter one that
+    happens to be a substring of it.
+    """
+    accounts = get_all_accounts()
+    text_lower = free_text.lower()
+    matches = [a for a in accounts if a["name"].lower() in text_lower]
+    if not matches:
+        return None
+    return max(matches, key=lambda a: len(a["name"]))
 
 
 def _handle_status(text: str, say, logger):
@@ -382,7 +399,17 @@ def _handle_ask(text: str, event: dict, say, client, logger):
     question = question_match.group(1).strip()
     say(f"🔍 Searching Slack for: _{question}_")
 
-    answer = answer_question(client, question, action_token)
+    # Prefer the account tied to the current channel, but AMs often ask from
+    # a separate internal channel (deliberately, so nothing about the ask
+    # itself is visible to the customer in a shared Slack Connect channel) —
+    # fall back to matching an account name mentioned in the question itself.
+    channel_id = event.get("channel")
+    account = get_account_by_channel(channel_id) if channel_id else None
+    if not account:
+        account = _find_account_mentioned_in(question)
+    signals = get_recent_signals(account["id"]) if account and account.get("enable_external_signals") else None
+
+    answer = answer_question(client, question, action_token, signals=signals)
     say(answer)
     logger.info(f"RTS ask: \"{question[:60]}\" -> answered")
 

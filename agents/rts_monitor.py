@@ -21,9 +21,12 @@ logger = logging.getLogger(__name__)
 RTS_ANSWER_SYSTEM_PROMPT = """
 You are Pulse, a relationship intelligence agent. You've been given a set of
 Slack messages retrieved via search that are relevant to a question an account
-manager asked. Answer the question directly and specifically, citing message
-authors and approximate dates where relevant. If the retrieved messages don't
-actually answer the question, say so plainly rather than guessing.
+manager asked, and optionally a list of external signals Pulse has already
+detected for this account (news headlines, not Slack messages). Answer the
+question directly and specifically, citing message authors and approximate
+dates for Slack content, and citing headlines plainly for external signals.
+If neither source actually answers the question, say so plainly rather than
+guessing.
 
 Keep the answer to 2-4 sentences. Write in plain text, no markdown formatting,
 suitable for a Slack message.
@@ -64,16 +67,25 @@ def search_workspace(
         return []
 
 
-def answer_question(slack_client, question: str, action_token: str) -> str:
+def answer_question(
+    slack_client, question: str, action_token: str, signals: Optional[list[dict]] = None
+) -> str:
     """
     Full RTS pipeline: search the workspace for relevant context, then have
     Claude synthesize a direct answer.
+
+    `signals` — optional list of this account's recent external signal rows
+    (from db.queries.get_recent_signals). These are NOT part of the RTS
+    search itself — RTS only ever searches Slack messages — but folding them
+    into the same answer lets `@Pulse ask` speak to "what external signals
+    have you found" questions using data Pulse already collected separately,
+    rather than pretending RTS can search news it never touches.
     """
     results = search_workspace(slack_client, question, action_token)
 
-    if not results:
+    if not results and not signals:
         return (
-            "I couldn't find any relevant messages in the channels I have access to. "
+            "I couldn't find any relevant messages or external signals for this account. "
             "Try rephrasing, or make sure I've been added to the right channel."
         )
 
@@ -83,8 +95,13 @@ def answer_question(slack_client, question: str, action_token: str) -> str:
         channel = r.get("channel_name", "unknown-channel")
         content = r.get("content", "")
         context_lines.append(f"[#{channel}] {author}: {content}")
+    context_block = "\n".join(context_lines) if context_lines else "(no matching Slack messages found)"
 
-    context_block = "\n".join(context_lines)
+    signal_lines = [
+        f"- ({s['signal_type']}, severity {s['severity']}) {s['headline']}"
+        for s in (signals or [])
+    ]
+    signal_block = "\n".join(signal_lines) if signal_lines else "(no external signals on file)"
 
     client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
     try:
@@ -94,10 +111,14 @@ def answer_question(slack_client, question: str, action_token: str) -> str:
             system=RTS_ANSWER_SYSTEM_PROMPT,
             messages=[{
                 "role": "user",
-                "content": f"Question: {question}\n\nRetrieved messages:\n{context_block}",
+                "content": (
+                    f"Question: {question}\n\n"
+                    f"Retrieved Slack messages:\n{context_block}\n\n"
+                    f"External signals already detected for this account:\n{signal_block}"
+                ),
             }],
         )
         return response.content[0].text.strip()
     except anthropic.APIError as e:
         logger.error(f"Answer synthesis failed: {e}")
-        return "I found some relevant messages but couldn't synthesize an answer right now."
+        return "I found some relevant context but couldn't synthesize an answer right now."
