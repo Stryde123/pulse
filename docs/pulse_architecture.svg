@@ -86,7 +86,7 @@
 
 <g class="c-blue"><rect x="260" y="330" width="150" height="68" rx="8" class="box"></rect>
 <text x="335" y="356" text-anchor="middle" class="title">Pattern Detector</text>
-<text x="335" y="371" text-anchor="middle" class="subtitle">8 risk-language categories</text></g>
+<text x="335" y="371" text-anchor="middle" class="subtitle">7 risk-language categories</text></g>
 
 <g class="c-blue"><rect x="430" y="330" width="150" height="68" rx="8" class="box"></rect>
 <text x="505" y="356" text-anchor="middle" class="title">Champion Tracker</text>
